@@ -1,3 +1,4 @@
+
 import sqlite3
 
 conexao = sqlite3.connect("motorup.db")
@@ -10,11 +11,11 @@ def usuarios():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS banco_usuarios(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome NOT NULL,
-        cpf UNIQUE,
+        nome TEXT NOT NULL,
+        cpf TEXT UNIQUE,
         telefone TEXT NOT NULL,
-        email UNIQUE NOT NULL,
-        senha NOT NULL
+        email TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL
     )
     ''')
 
@@ -24,9 +25,9 @@ def veiculos():
     CREATE TABLE IF NOT EXISTS banco_veiculos(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER NOT NULL,
-        placa UNIQUE NOT NULL,
-        marca NOT NULL,
-        modelo NOT NULL,
+        placa TEXT UNIQUE NOT NULL,
+        marca TEXT NOT NULL,
+        modelo TEXT NOT NULL,
         ano INTEGER,
         cor TEXT,
 
@@ -39,7 +40,7 @@ def servicos():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS banco_servicos(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome NOT NULL,
+        nome TEXT NOT NULL,
         descricao TEXT,
         preco REAL NOT NULL,
         tempo_estimado INTEGER
@@ -51,8 +52,8 @@ def pecas():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS banco_pecas(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome NOT NULL,
-        codigo UNIQUE,
+        nome TEXT NOT NULL,
+        codigo TEXT UNIQUE,
         estoque INTEGER NOT NULL,
         preco REAL NOT NULL
     )
@@ -112,7 +113,7 @@ def historico_os():
     CREATE TABLE IF NOT EXISTS banco_historico_os(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ordem_servico_id INTEGER NOT NULL,
-        status NOT NULL,
+        status TEXT NOT NULL,
         descricao TEXT,
         data_hora TEXT NOT NULL,
 
