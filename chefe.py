@@ -28,7 +28,7 @@ def listar_servicos():
 
     print("\n===== SERVIÇOS =====")
 
-    for linha in dados:
+    for linha in dados:             #Esse código percorre todos os registros armazenados em dados e imprime cada um deles na tela, um por vez.
         print(linha)
 
 
@@ -62,7 +62,7 @@ def deletar_servico():
         print("Operação de exclusão realizada!")
 
     except sqlite3.IntegrityError:
-        print("Não foi possível deletar! Esse serviço está vinculado a uma ordem de serviço.")
+        print("Não foi possível deletar!")
 
 
 def cadastrar_peca():

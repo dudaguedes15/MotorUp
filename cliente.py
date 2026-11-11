@@ -40,7 +40,7 @@ def cadastrar_veiculo():
     placa = input("Placa: ")
     marca = input("Marca: ")
     modelo = input("Modelo: ")
-    ano = input("Ano: ")
+    ano = int(input("Ano: "))
     cor = input("Cor: ")
 
     cursor.execute("""
@@ -102,7 +102,18 @@ def listar_pagamentos():
         print(linha)
 
 def atualizar_cliente():
+
     id_cliente = input("Digite o ID do cliente: ")
+
+    cursor.execute(
+        "SELECT id FROM banco_usuarios WHERE id=?",
+        (id_cliente,)
+    )
+
+    if cursor.fetchone() is None:
+        print("Cliente não encontrado!")
+        return
+
     nome = input("Novo nome: ")
     cpf = input("Novo CPF: ")
     telefone = input("Novo telefone: ")
@@ -116,19 +127,26 @@ def atualizar_cliente():
     """, (nome, cpf, telefone, email, senha, id_cliente))
 
     conexao.commit()
-
-    if cursor.rowcount > 0:
-        print("Cliente atualizado!")
-    else:
-        print("Cliente não encontrado!")
+    print("Cliente atualizado!")
 
 
 def atualizar_veiculo():
+
     id_veiculo = input("Digite o ID do veículo: ")
+
+    cursor.execute(
+        "SELECT id FROM banco_veiculos WHERE id=?",
+        (id_veiculo,)
+    )
+
+    if cursor.fetchone() is None:
+        print("Veículo não encontrado!")
+        return
+
     usuario_id = input("Novo ID do cliente: ")
 
     cursor.execute(
-        "SELECT id FROM banco_usuarios WHERE id = ?",
+        "SELECT id FROM banco_usuarios WHERE id=?",
         (usuario_id,)
     )
 
@@ -139,7 +157,7 @@ def atualizar_veiculo():
     placa = input("Nova placa: ")
     marca = input("Nova marca: ")
     modelo = input("Novo modelo: ")
-    ano = input("Novo ano: ")
+    ano = int(input("Novo ano: "))
     cor = input("Nova cor: ")
 
     cursor.execute("""
@@ -149,15 +167,22 @@ def atualizar_veiculo():
     """, (usuario_id, placa, marca, modelo, ano, cor, id_veiculo))
 
     conexao.commit()
-
-    if cursor.rowcount > 0:
-        print("Veículo atualizado!")
-    else:
-        print("Veículo não encontrado!")
+    print("Veículo atualizado!")
 
 
 def atualizar_ordem():
+
     id_ordem = input("Digite o ID da ordem: ")
+
+    cursor.execute(
+        "SELECT id FROM banco_ordens_servico WHERE id=?",
+        (id_ordem,)
+    )
+
+    if cursor.fetchone() is None:
+        print("Ordem não encontrada!")
+        return
+
     veiculo_id = input("Novo ID do veículo: ")
     funcionario_id = input("Novo ID do funcionário: ")
     data_entrada = input("Nova data de entrada: ")
@@ -174,15 +199,22 @@ def atualizar_ordem():
           data_prevista, status, observacoes, id_ordem))
 
     conexao.commit()
-
-    if cursor.rowcount > 0:
-        print("Ordem atualizada!")
-    else:
-        print("Ordem não encontrada!")
+    print("Ordem atualizada!")
 
 
 def atualizar_historico():
+
     id_historico = input("Digite o ID do histórico: ")
+
+    cursor.execute(
+        "SELECT id FROM banco_historico_os WHERE id=?",
+        (id_historico,)
+    )
+
+    if cursor.fetchone() is None:
+        print("Histórico não encontrado!")
+        return
+
     ordem_id = input("Novo ID da ordem: ")
     status = input("Novo status: ")
     descricao = input("Nova descrição: ")
@@ -195,14 +227,10 @@ def atualizar_historico():
     """, (ordem_id, status, descricao, data_hora, id_historico))
 
     conexao.commit()
-
-    if cursor.rowcount > 0:
-        print("Histórico atualizado!")
-    else:
-        print("Histórico não encontrado!")
-
+    print("Histórico atualizado!")
 
 def deletar_cliente():
+
     id_cliente = input("Digite o ID do cliente: ")
 
     try:
@@ -217,8 +245,19 @@ def deletar_cliente():
     except sqlite3.IntegrityError:
         print("Não foi possível deletar! Existem registros vinculados a esse cliente.")
 
+
 def deletar_veiculo():
+
     id_veiculo = input("Digite o ID do veículo: ")
+
+    cursor.execute(
+        "SELECT id FROM banco_veiculos WHERE id=?",
+        (id_veiculo,)
+    )
+
+    if cursor.fetchone() is None:
+        print("Veículo não encontrado!")
+        return
 
     cursor.execute(
         "DELETE FROM banco_veiculos WHERE id=?",
@@ -226,31 +265,47 @@ def deletar_veiculo():
     )
 
     conexao.commit()
-
-    if cursor.rowcount > 0:
-        print("Veículo deletado!")
-    else:
-        print("Veículo não encontrado!")
+    print("Veículo deletado!")
 
 
 def deletar_ordem():
+
     id_ordem = input("Digite o ID da ordem de serviço: ")
 
     cursor.execute(
-        "DELETE FROM banco_ordens_servico WHERE id=?",
+        "SELECT id FROM banco_ordens_servico WHERE id=?",
         (id_ordem,)
     )
 
-    conexao.commit()
-
-    if cursor.rowcount > 0:
-        print("Ordem de serviço deletada!")
-    else:
+    if cursor.fetchone() is None:
         print("Ordem não encontrada!")
+        return
+
+    try:
+        cursor.execute(
+            "DELETE FROM banco_ordens_servico WHERE id=?",
+            (id_ordem,)
+        )
+
+        conexao.commit()
+        print("Ordem de serviço deletada!")
+
+    except sqlite3.IntegrityError:
+        print("Não foi possível deletar! Existem registros vinculados a essa ordem.")
 
 
 def deletar_historico():
+
     id_historico = input("Digite o ID do histórico: ")
+
+    cursor.execute(
+        "SELECT id FROM banco_historico_os WHERE id=?",
+        (id_historico,)
+    )
+
+    if cursor.fetchone() is None:
+        print("Histórico não encontrado!")
+        return
 
     cursor.execute(
         "DELETE FROM banco_historico_os WHERE id=?",
@@ -258,13 +313,10 @@ def deletar_historico():
     )
 
     conexao.commit()
-
-    if cursor.rowcount > 0:
-        print("Histórico deletado!")
-    else:
-        print("Histórico não encontrado!")
+    print("Histórico deletado!")
 
 def menu_cadastrar():
+
     while True:
         print("\n===== CADASTRAR =====")
         print("1 - Cadastrar cliente")
@@ -273,20 +325,22 @@ def menu_cadastrar():
 
         opcao = input("Escolha uma opção: ")
 
-        if opcao == "1":
-            cadastrar_cliente()
+        match opcao:
+            case "1":
+                cadastrar_cliente()
 
-        elif opcao == "2":
-            cadastrar_veiculo()
+            case "2":
+                cadastrar_veiculo()
 
-        elif opcao == "0":
-            break
+            case "0":
+                break
 
-        else:
-            print("Opção inválida!")
+            case _:
+                print("Opção inválida!")
 
 
 def menu_listar():
+
     while True:
         print("\n===== LISTAR =====")
         print("1 - Listar clientes")
@@ -298,29 +352,31 @@ def menu_listar():
 
         opcao = input("Escolha uma opção: ")
 
-        if opcao == "1":
-            listar_clientes()
+        match opcao:
+            case "1":
+                listar_clientes()
 
-        elif opcao == "2":
-            listar_veiculos()
+            case "2":
+                listar_veiculos()
 
-        elif opcao == "3":
-            listar_ordens()
+            case "3":
+                listar_ordens()
 
-        elif opcao == "4":
-            listar_historico()
+            case "4":
+                listar_historico()
 
-        elif opcao == "5":
-            listar_pagamentos()
+            case "5":
+                listar_pagamentos()
 
-        elif opcao == "0":
-            break
+            case "0":
+                break
 
-        else:
-            print("Opção inválida!")
+            case _:
+                print("Opção inválida!")
 
 
 def menu_atualizar():
+
     while True:
         print("\n===== ATUALIZAR =====")
         print("1 - Atualizar cliente")
@@ -331,26 +387,28 @@ def menu_atualizar():
 
         opcao = input("Escolha uma opção: ")
 
-        if opcao == "1":
-            atualizar_cliente()
+        match opcao:
+            case "1":
+                atualizar_cliente()
 
-        elif opcao == "2":
-            atualizar_veiculo()
+            case "2":
+                atualizar_veiculo()
 
-        elif opcao == "3":
-            atualizar_ordem()
+            case "3":
+                atualizar_ordem()
 
-        elif opcao == "4":
-            atualizar_historico()
+            case "4":
+                atualizar_historico()
 
-        elif opcao == "0":
-            break
+            case "0":
+                break
 
-        else:
-            print("Opção inválida!")
-
+            case _:
+                print("Opção inválida!")
+                
 
 def menu_deletar():
+
     while True:
         print("\n===== DELETAR =====")
         print("1 - Deletar cliente")
@@ -361,26 +419,28 @@ def menu_deletar():
 
         opcao = input("Escolha uma opção: ")
 
-        if opcao == "1":
-            deletar_cliente()
+        match opcao:
+            case "1":
+                deletar_cliente()
 
-        elif opcao == "2":
-            deletar_veiculo()
+            case "2":
+                deletar_veiculo()
 
-        elif opcao == "3":
-            deletar_ordem()
+            case "3":
+                deletar_ordem()
 
-        elif opcao == "4":
-            deletar_historico()
+            case "4":
+                deletar_historico()
 
-        elif opcao == "0":
-            break
+            case "0":
+                break
 
-        else:
-            print("Opção inválida!")
+            case _:
+                print("Opção inválida!")
 
 
 def menu_principal():
+
     while True:
         print("\n===== MOTORUP - ÁREA DO CLIENTE =====")
         print("1 - Cadastrar")
@@ -391,25 +451,27 @@ def menu_principal():
 
         opcao = input("Escolha uma opção: ")
 
-        if opcao == "1":
-            menu_cadastrar()
+        match opcao:
+            case "1":
+                menu_cadastrar()
 
-        elif opcao == "2":
-            menu_listar()
+            case "2":
+                menu_listar()
 
-        elif opcao == "3":
-            menu_atualizar()
+            case "3":
+                menu_atualizar()
 
-        elif opcao == "4":
-            menu_deletar()
+            case "4":
+                menu_deletar()
 
-        elif opcao == "0":
-            print("Sistema encerrado!")
-            break
+            case "0":
+                print("Sistema encerrado!")
+                break
 
-        else:
-            print("Opção inválida!")
+            case _:
+                print("Opção inválida!")
 
 
 menu_principal()
+
 conexao.close()
