@@ -15,9 +15,45 @@ def usuarios():
         cpf TEXT UNIQUE,
         telefone TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
-        senha TEXT NOT NULL
+        senha TEXT NOT NULL,
+        tipo TEXT NOT NULL
     )
     ''')
+
+
+def atualizar_banco():
+    cursor.execute("PRAGMA table_info(banco_usuarios)")
+    colunas = cursor.fetchall()
+
+    tipo_existe = False
+
+    for coluna in colunas:
+        if coluna[1] == "tipo":
+            tipo_existe = True
+
+    if tipo_existe == False:
+        cursor.execute("""
+        ALTER TABLE banco_usuarios
+        ADD COLUMN tipo TEXT NOT NULL DEFAULT 'cliente'
+        """)
+
+    cursor.execute("""
+    SELECT name FROM sqlite_master
+    WHERE type = 'table' AND name = 'banco_funcionarios'
+    """)
+
+    tabela_existe = cursor.fetchone()
+
+    if tabela_existe is not None:
+        cursor.execute("""
+        UPDATE banco_usuarios
+        SET tipo = 'funcionario'
+        WHERE id IN (
+            SELECT usuario_id FROM banco_funcionarios
+        )
+        """)
+
+    conexao.commit()
 
 
 def veiculos():
@@ -30,7 +66,6 @@ def veiculos():
         modelo TEXT NOT NULL,
         ano INTEGER,
         cor TEXT,
-
         FOREIGN KEY (usuario_id) REFERENCES banco_usuarios(id)
     )
     ''')
@@ -71,7 +106,6 @@ def ordens_servico():
         data_conclusao TEXT,
         status TEXT NOT NULL,
         observacoes TEXT,
-
         FOREIGN KEY (veiculo_id) REFERENCES banco_veiculos(id),
         FOREIGN KEY (funcionario_id) REFERENCES banco_usuarios(id)
     )
@@ -86,7 +120,6 @@ def os_servicos():
         servico_id INTEGER NOT NULL,
         quantidade INTEGER NOT NULL,
         preco REAL NOT NULL,
-
         FOREIGN KEY (ordem_servico_id) REFERENCES banco_ordens_servico(id),
         FOREIGN KEY (servico_id) REFERENCES banco_servicos(id)
     )
@@ -101,7 +134,6 @@ def os_pecas():
         peca_id INTEGER NOT NULL,
         quantidade INTEGER NOT NULL,
         preco REAL NOT NULL,
-
         FOREIGN KEY (ordem_servico_id) REFERENCES banco_ordens_servico(id),
         FOREIGN KEY (peca_id) REFERENCES banco_pecas(id)
     )
@@ -116,7 +148,6 @@ def historico_os():
         status TEXT NOT NULL,
         descricao TEXT,
         data_hora TEXT NOT NULL,
-
         FOREIGN KEY (ordem_servico_id) REFERENCES banco_ordens_servico(id)
     )
     ''')
@@ -131,13 +162,14 @@ def pagamentos():
         forma_pagamento TEXT NOT NULL,
         status TEXT NOT NULL,
         data_pagamento TEXT,
-
         FOREIGN KEY (ordem_servico_id) REFERENCES banco_ordens_servico(id)
     )
     ''')
 
 
 usuarios()
+atualizar_banco()
+
 veiculos()
 servicos()
 pecas()
@@ -147,6 +179,7 @@ os_pecas()
 historico_os()
 pagamentos()
 
-
 conexao.commit()
 conexao.close()
+
+print("Banco de dados atualizado!")

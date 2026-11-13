@@ -7,31 +7,35 @@ cursor = conexao.cursor()
 
 
 def cadastrar_cliente():
-
+    
     nome = input("Nome: ")
     cpf = input("CPF: ")
     telefone = input("Telefone: ")
     email = input("Email: ")
     senha = input("Senha: ")
 
-    cursor.execute("""
-    INSERT INTO banco_usuarios
-    (nome, cpf, telefone, email, senha)
-    VALUES (?, ?, ?, ?, ?)
-    """, (nome, cpf, telefone, email, senha))
+    try:
+        cursor.execute("""
+        INSERT INTO banco_usuarios
+        (nome, cpf, telefone, email, senha, tipo)
+        VALUES (?, ?, ?, ?, ?, 'cliente')
+        """, (nome, cpf, telefone, email, senha))
 
-    conexao.commit()
-    print("Cliente cadastrado!")
+        conexao.commit()
+        print("Cliente cadastrado!")
+
+    except sqlite3.IntegrityError:
+        print("CPF ou email já cadastrado!")
 
 
 def cadastrar_veiculo():
 
     usuario_id = input("ID do cliente: ")
 
-    cursor.execute(
-        "SELECT id FROM banco_usuarios WHERE id = ?",
-        (usuario_id,)
-    )
+    cursor.execute("""
+    SELECT id FROM banco_usuarios
+    WHERE id = ? AND tipo = 'cliente'
+    """, (usuario_id,))
 
     if cursor.fetchone() is None:
         print("Cliente não encontrado!")
@@ -43,33 +47,53 @@ def cadastrar_veiculo():
     ano = int(input("Ano: "))
     cor = input("Cor: ")
 
-    cursor.execute("""
-    INSERT INTO banco_veiculos
-    (usuario_id, placa, marca, modelo, ano, cor)
-    VALUES (?, ?, ?, ?, ?, ?)
-    """, (usuario_id, placa, marca, modelo, ano, cor))
+    try:
+        cursor.execute("""
+        INSERT INTO banco_veiculos
+        (usuario_id, placa, marca, modelo, ano, cor)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """, (usuario_id, placa, marca, modelo, ano, cor))
 
-    conexao.commit()
-    print("Veículo cadastrado!")
+        conexao.commit()
+        print("Veículo cadastrado!")
+
+    except sqlite3.IntegrityError:
+        print("Essa placa já está cadastrada!")
+
 
 def listar_clientes():
-    cursor.execute("SELECT * FROM banco_usuarios")
+    cursor.execute("""
+    SELECT * FROM banco_usuarios
+    WHERE tipo = 'cliente'
+    """)
     dados = cursor.fetchall()
 
     print("\n===== CLIENTES =====")
 
-    for linha in dados:
-        print(linha)
+    if dados:
+        for linha in dados:
+            print(linha)
+    else:
+        print("Nenhum cliente cadastrado!")
 
 
 def listar_veiculos():
-    cursor.execute("SELECT * FROM banco_veiculos")
+    cursor.execute("""
+    SELECT banco_veiculos.*
+    FROM banco_veiculos
+    INNER JOIN banco_usuarios
+    ON banco_veiculos.usuario_id = banco_usuarios.id
+    WHERE banco_usuarios.tipo = 'cliente'
+    """)
     dados = cursor.fetchall()
 
     print("\n===== VEÍCULOS =====")
 
-    for linha in dados:
-        print(linha)
+    if dados:
+        for linha in dados:
+            print(linha)
+    else:
+        print("Nenhum veículo cadastrado!")
 
 
 def listar_ordens():
@@ -78,8 +102,11 @@ def listar_ordens():
 
     print("\n===== ORDENS DE SERVIÇO =====")
 
-    for linha in dados:
-        print(linha)
+    if dados:
+        for linha in dados:
+            print(linha)
+    else:
+        print("Nenhuma ordem cadastrada!")
 
 
 def listar_historico():
@@ -88,8 +115,11 @@ def listar_historico():
 
     print("\n===== HISTÓRICO DE SERVIÇO =====")
 
-    for linha in dados:
-        print(linha)
+    if dados:
+        for linha in dados:
+            print(linha)
+    else:
+        print("Nenhum histórico cadastrado!")
 
 
 def listar_pagamentos():
@@ -98,17 +128,21 @@ def listar_pagamentos():
 
     print("\n===== PAGAMENTOS =====")
 
-    for linha in dados:
-        print(linha)
+    if dados:
+        for linha in dados:
+            print(linha)
+    else:
+        print("Nenhum pagamento cadastrado!")
+
 
 def atualizar_cliente():
 
     id_cliente = input("Digite o ID do cliente: ")
 
-    cursor.execute(
-        "SELECT id FROM banco_usuarios WHERE id=?",
-        (id_cliente,)
-    )
+    cursor.execute("""
+    SELECT id FROM banco_usuarios
+    WHERE id = ? AND tipo = 'cliente'
+    """, (id_cliente,))
 
     if cursor.fetchone() is None:
         print("Cliente não encontrado!")
@@ -120,24 +154,28 @@ def atualizar_cliente():
     email = input("Novo email: ")
     senha = input("Nova senha: ")
 
-    cursor.execute("""
-    UPDATE banco_usuarios
-    SET nome=?, cpf=?, telefone=?, email=?, senha=?
-    WHERE id=?
-    """, (nome, cpf, telefone, email, senha, id_cliente))
+    try:
+        cursor.execute("""
+        UPDATE banco_usuarios
+        SET nome=?, cpf=?, telefone=?, email=?, senha=?
+        WHERE id=? AND tipo='cliente'
+        """, (nome, cpf, telefone, email, senha, id_cliente))
 
-    conexao.commit()
-    print("Cliente atualizado!")
+        conexao.commit()
+        print("Cliente atualizado!")
+
+    except sqlite3.IntegrityError:
+        print("Esse CPF ou email já está cadastrado!")
 
 
 def atualizar_veiculo():
 
     id_veiculo = input("Digite o ID do veículo: ")
 
-    cursor.execute(
-        "SELECT id FROM banco_veiculos WHERE id=?",
-        (id_veiculo,)
-    )
+    cursor.execute("""
+    SELECT id FROM banco_veiculos
+    WHERE id = ?
+    """, (id_veiculo,))
 
     if cursor.fetchone() is None:
         print("Veículo não encontrado!")
@@ -145,10 +183,10 @@ def atualizar_veiculo():
 
     usuario_id = input("Novo ID do cliente: ")
 
-    cursor.execute(
-        "SELECT id FROM banco_usuarios WHERE id=?",
-        (usuario_id,)
-    )
+    cursor.execute("""
+    SELECT id FROM banco_usuarios
+    WHERE id = ? AND tipo = 'cliente'
+    """, (usuario_id,))
 
     if cursor.fetchone() is None:
         print("Cliente não encontrado!")
@@ -160,31 +198,55 @@ def atualizar_veiculo():
     ano = int(input("Novo ano: "))
     cor = input("Nova cor: ")
 
-    cursor.execute("""
-    UPDATE banco_veiculos
-    SET usuario_id=?, placa=?, marca=?, modelo=?, ano=?, cor=?
-    WHERE id=?
-    """, (usuario_id, placa, marca, modelo, ano, cor, id_veiculo))
+    try:
+        cursor.execute("""
+        UPDATE banco_veiculos
+        SET usuario_id=?, placa=?, marca=?, modelo=?, ano=?, cor=?
+        WHERE id=?
+        """, (usuario_id, placa, marca, modelo, ano, cor, id_veiculo))
 
-    conexao.commit()
-    print("Veículo atualizado!")
+        conexao.commit()
+        print("Veículo atualizado!")
+
+    except sqlite3.IntegrityError:
+        print("Essa placa já está cadastrada!")
 
 
 def atualizar_ordem():
 
     id_ordem = input("Digite o ID da ordem: ")
 
-    cursor.execute(
-        "SELECT id FROM banco_ordens_servico WHERE id=?",
-        (id_ordem,)
-    )
+    cursor.execute("""
+    SELECT id FROM banco_ordens_servico
+    WHERE id = ?
+    """, (id_ordem,))
 
     if cursor.fetchone() is None:
         print("Ordem não encontrada!")
         return
 
     veiculo_id = input("Novo ID do veículo: ")
+
+    cursor.execute("""
+    SELECT id FROM banco_veiculos
+    WHERE id = ?
+    """, (veiculo_id,))
+
+    if cursor.fetchone() is None:
+        print("Veículo não encontrado!")
+        return
+
     funcionario_id = input("Novo ID do funcionário: ")
+
+    cursor.execute("""
+    SELECT id FROM banco_usuarios
+    WHERE id = ? AND tipo = 'funcionario'
+    """, (funcionario_id,))
+
+    if cursor.fetchone() is None:
+        print("Funcionário não encontrado!")
+        return
+
     data_entrada = input("Nova data de entrada: ")
     data_prevista = input("Nova data prevista: ")
     status = input("Novo status: ")
@@ -206,16 +268,26 @@ def atualizar_historico():
 
     id_historico = input("Digite o ID do histórico: ")
 
-    cursor.execute(
-        "SELECT id FROM banco_historico_os WHERE id=?",
-        (id_historico,)
-    )
+    cursor.execute("""
+    SELECT id FROM banco_historico_os
+    WHERE id = ?
+    """, (id_historico,))
 
     if cursor.fetchone() is None:
         print("Histórico não encontrado!")
         return
 
     ordem_id = input("Novo ID da ordem: ")
+
+    cursor.execute("""
+    SELECT id FROM banco_ordens_servico
+    WHERE id = ?
+    """, (ordem_id,))
+
+    if cursor.fetchone() is None:
+        print("Ordem não encontrada!")
+        return
+
     status = input("Novo status: ")
     descricao = input("Nova descrição: ")
     data_hora = input("Nova data e hora: ")
@@ -229,15 +301,25 @@ def atualizar_historico():
     conexao.commit()
     print("Histórico atualizado!")
 
+
 def deletar_cliente():
 
     id_cliente = input("Digite o ID do cliente: ")
 
+    cursor.execute("""
+    SELECT id FROM banco_usuarios
+    WHERE id = ? AND tipo = 'cliente'
+    """, (id_cliente,))
+
+    if cursor.fetchone() is None:
+        print("Cliente não encontrado!")
+        return
+
     try:
-        cursor.execute(
-            "DELETE FROM banco_usuarios WHERE id=?",
-            (id_cliente,)
-        )
+        cursor.execute("""
+        DELETE FROM banco_usuarios
+        WHERE id = ? AND tipo = 'cliente'
+        """, (id_cliente,))
 
         conexao.commit()
         print("Cliente deletado!")
@@ -250,42 +332,46 @@ def deletar_veiculo():
 
     id_veiculo = input("Digite o ID do veículo: ")
 
-    cursor.execute(
-        "SELECT id FROM banco_veiculos WHERE id=?",
-        (id_veiculo,)
-    )
+    cursor.execute("""
+    SELECT id FROM banco_veiculos
+    WHERE id = ?
+    """, (id_veiculo,))
 
     if cursor.fetchone() is None:
         print("Veículo não encontrado!")
         return
 
-    cursor.execute(
-        "DELETE FROM banco_veiculos WHERE id=?",
-        (id_veiculo,)
-    )
+    try:
+        cursor.execute("""
+        DELETE FROM banco_veiculos
+        WHERE id = ?
+        """, (id_veiculo,))
 
-    conexao.commit()
-    print("Veículo deletado!")
+        conexao.commit()
+        print("Veículo deletado!")
+
+    except sqlite3.IntegrityError:
+        print("Não foi possível deletar! Existem ordens vinculadas a esse veículo.")
 
 
 def deletar_ordem():
 
     id_ordem = input("Digite o ID da ordem de serviço: ")
 
-    cursor.execute(
-        "SELECT id FROM banco_ordens_servico WHERE id=?",
-        (id_ordem,)
-    )
+    cursor.execute("""
+    SELECT id FROM banco_ordens_servico
+    WHERE id = ?
+    """, (id_ordem,))
 
     if cursor.fetchone() is None:
         print("Ordem não encontrada!")
         return
 
     try:
-        cursor.execute(
-            "DELETE FROM banco_ordens_servico WHERE id=?",
-            (id_ordem,)
-        )
+        cursor.execute("""
+        DELETE FROM banco_ordens_servico
+        WHERE id = ?
+        """, (id_ordem,))
 
         conexao.commit()
         print("Ordem de serviço deletada!")
@@ -298,22 +384,23 @@ def deletar_historico():
 
     id_historico = input("Digite o ID do histórico: ")
 
-    cursor.execute(
-        "SELECT id FROM banco_historico_os WHERE id=?",
-        (id_historico,)
-    )
+    cursor.execute("""
+    SELECT id FROM banco_historico_os
+    WHERE id = ?
+    """, (id_historico,))
 
     if cursor.fetchone() is None:
         print("Histórico não encontrado!")
         return
 
-    cursor.execute(
-        "DELETE FROM banco_historico_os WHERE id=?",
-        (id_historico,)
-    )
+    cursor.execute("""
+    DELETE FROM banco_historico_os
+    WHERE id = ?
+    """, (id_historico,))
 
     conexao.commit()
     print("Histórico deletado!")
+
 
 def menu_cadastrar():
 
@@ -405,7 +492,7 @@ def menu_atualizar():
 
             case _:
                 print("Opção inválida!")
-                
+
 
 def menu_deletar():
 
